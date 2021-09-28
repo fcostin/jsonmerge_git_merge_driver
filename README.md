@@ -4,7 +4,8 @@
 
 Simple demo custom Git merge driver to merge JSON objects stored in `*.json` files in a Git repository.
 
-The script is not production quality but provides an example of the
+The script is not production quality but provides an example of how to define
+a custom merge driver.
 
 ### Demo JSON object custom merge strategy
 
