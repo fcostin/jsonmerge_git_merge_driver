@@ -2,7 +2,44 @@
 
 ### Purpose
 
-Simple demo of configuring a custom Git merge driver to merge JSON files stored in a Git repository.
+Simple demo custom Git merge driver to merge JSON objects stored in `*.json` files in a Git repository.
+
+The script is not production quality but provides an example of the
+
+### Demo JSON object custom merge strategy
+
+Two limited merge strategies are supported:
+
+1.  if the source and destination files are equal when interpreted as JSON objects,
+    merge them as that JSON value, written to file in a normalised format.
+
+2.  if the source and destimation files are not equal when interpreted as JSON objects,
+    check that the source, destination and base JSON values are all JSON objects
+    with the same top-level keys. If they are, compute a shallow merge using top-level
+    key value pairs:
+    *   compute a top-level attribute patch between the base JSON value and the source JSON value
+    *   apply the top-level attribute patch to the destination JSON value
+    The result is deemed the merged JSON value.
+    Write the merged JSON value to file in a normalised format.
+
+Not-supported
+
+*   merging inside git stash
+*   merging inside git rebase
+*   merging files that are not JSON files
+*   octopus merges
+
+
+Note that there are many scenarios not covered by strategy 1 or 2. In this case this
+merge tool gives up and returns nonzero, which puts git into the merge conflict state.
+
+Note that the automatic merge strategies may not do what you want.
+
+It is plausible that strategy 2 may not do what you want in some cases: the
+strategy regards the patch from base to source as having higher priority
+than the patch from base to destination, and resolves conflicts according to
+priority. This precedence might not make sense for your workflow.
+
 
 ### Repository configuration
 
@@ -51,10 +88,23 @@ repository, containing the following:
 This line instructs git to invoke the `jsonmerge-driver` when
 merging files that match the pattern `*.json`.
 
-### Potential Extension: using additional files in the repo to assist resolving merges
+### Possible extension: schema-aware JSON merge strategy
 
-
-
+When version controlling JSON values containing structured data,
+a natural thing to do might be to define a schema for the JSON
+values, using [JSON Schema](https://json-schema.org/). If we know
+that a particular JSON value stored as a file in the git repo
+should satisfy some particular JSON Schema, we might want the JSON
+merge driver to be aware of that Schema and, where the result of
+a merge is ambiguous, prefer a merge result that satisifes the
+schema.  In order to implement something like this, the merge
+driver would need a way to figure out the schema associated with
+a JSON file when merging that file. One way to do this could be
+to version control the JSON Schemas as files stored in the same
+git repo, and extend the JSON merge driver script with the
+capability to discover and load those schemas. Some details
+would need to be pinned down, such as which branch or version of
+the schema should be loaded?
 
 ### References
 
